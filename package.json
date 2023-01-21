@@ -1,0 +1,19 @@
+{
+  "name": "psa_backend",
+  "version": "1.0.0",
+  "description": "backend application for personal shipping assistant project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shravyarani12/cis693_backend.git"
+  },
+  "author": "Shravya Rani Damarapelli",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/shravyarani12/cis693_backend/issues"
+  },
+  "homepage": "https://github.com/shravyarani12/cis693_backend#readme"
+}
