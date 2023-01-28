@@ -26,6 +26,7 @@
     "joi": "^17.7.0",
     "jsonwebtoken": "^9.0.0",
     "knex": "^2.4.1",
+    "moment": "^2.29.4",
     "mysql": "^2.18.1",
     "node-fetch": "^2.6.8",
     "shippo": "^1.7.1"
