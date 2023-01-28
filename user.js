@@ -3,6 +3,8 @@
 const express = require('express');
 const Joi = require('joi');
 const router = express.Router();
+var jsonwebtoken = require('jsonwebtoken');
+
 
 router.post("/register", async (req, res, next) => {
     const body = req.body;

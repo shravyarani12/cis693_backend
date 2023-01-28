@@ -6,8 +6,9 @@ var { expressjwt: jwt } = require("express-jwt");
 const PORT = process.env.PORT;
 var jsonwebtoken = require('jsonwebtoken');
 const dbConn= require('./db');
-const routerShip=require("./shippo")
-const routerUser=require("./user")
+const routerShip=require("./shippo");
+const routerUser=require("./user");
+
 global.db=dbConn.db;
 
 // For parsing application/json
