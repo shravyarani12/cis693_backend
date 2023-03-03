@@ -3,6 +3,158 @@ const express = require('express');
 const router = express.Router();
 const Joi = require('joi');
 const moment = require('moment');
+const axios=require("axios");
+
+
+
+//Tracking:
+router.post("/addTracking", async (req, res, next) => {
+    let userId = req.auth.data.userId;
+    let body = req.body;
+    const schema = Joi.object().keys({
+        name: Joi.string().min(3).max(80).required(),
+        shippingProvider: Joi.string().min(1).max(11).required(),
+        trackingNum: Joi.string().min(1).max(40).required(),
+        status:Joi.string()
+    });
+    const result = schema.validate(req.body);
+    if (result.error) {
+        return res.status(400).send(result.error.details[0].message);
+    }
+    try {
+        let query = await db("tracking").insert({
+            "name": body.name,
+            "shippingProvider": body.shippingProvider,
+            "trackingNum": body.trackingNum,
+            "userId": userId,
+            "status":body.status?body.status:'',
+            createdDateTime: moment().format('YYYY-MM-DD HH:mm:ss'),
+            updatedDateTime: moment().format('YYYY-MM-DD HH:mm:ss')
+        });
+
+        try{
+            const uri = `https://api.goshippo.com/tracks/?carrier=${body.shippingProvider}&tracking_number=${body.trackingNum}`
+            const response = await axios(uri, {
+                method: 'post',
+                body: null,
+                //headers: { 'authorization': `ShippoToken ${process.env.shippo_key}` }
+                headers: { 'authorization': `ShippoToken shippo_live_ecda4f08fde1c1481f5b9120f9e3ed2c0d0eaf28` }
+            });
+            const data = await response.data;
+            if (data.tracking_status?.status && data.tracking_status?.status == "DELIVERED") {
+                let query = await db("tracking").where({
+                    "name": body.name,
+                    "shippingProvider": body.shippingProvider,
+                    "trackingNum": body.trackingNum,
+                    "userId": userId})
+                .update({
+                    "status":'DELIVERED',
+                    updatedDateTime: moment().format('YYYY-MM-DD HH:mm:ss')
+                });
+                return res.status(200).json({
+                    status: "Tracking Added Succesfully"
+                })
+                // updateEntry("shippments", req.body.id, { status: "delivered" }, () => {
+                //     console.log("Updated Record");
+                //     return res.status(200).json(data)
+                // })
+            } else {
+                return res.status(200).json(data)
+            }
+        }catch(err){
+            return res.status(200).json({
+                status: "Tracking Added Succesfully"
+            });
+        }
+    } catch (err) {
+        return res.status(500).json({
+            status: "Internal Server Error",
+            "error": JSON.stringify(err)
+        });
+    }
+})
+
+
+
+
+
+
+router.get("/getTracking", async (req, res, next) => {
+    let userId = req.auth.data.userId;
+    let ds=[];
+    let ps=[];
+        try {
+            let trackings = await db("tracking").select().where('userId', userId)
+
+            for (let i = 0; i < trackings.length; i++) {
+                    if (trackings[i].status && trackings[i].status.toUpperCase() == "DELIVERED") {
+                        ds.push(trackings[i])
+                    } else {
+                        ps.push(trackings[i])
+                    }
+            }
+            return res.status(200).json({
+                pendingShipments: ps,
+                deliveredShipments:ds
+            });
+        } catch (err) {
+            return res.status(500).json({
+                status: "Internal Server Error",
+                "error": JSON.stringify(err)
+            });
+        }
+})
+
+router.post("/deleteTracking", async (req, res, next) => {
+    let userId = req.auth.data.userId;
+    let body = req.body;
+    let ds=[];
+    let ps=[];
+        try {
+            let trackings = await db("tracking").where({'userId': userId, trackingId:body.trackingId}).del()
+            return res.status(200).json({
+             status:"deleted succesfully"
+            });
+        } catch (err) {
+            return res.status(500).json({
+                status: "Internal Server Error",
+                "error": JSON.stringify(err)
+            });
+        }
+})
+
+router.post("/trackingMoreDetails", async (req, res, next) => {
+    let myDate = new Date();
+    myDate = myDate.toString();
+    try{
+        const uri = `https://api.goshippo.com/tracks/?carrier=${req.body.shipper}&tracking_number=${req.body.trackingNum}`
+        const response = await axios(uri, {
+            method: 'post',
+            body: null,
+            //headers: { 'authorization': `ShippoToken ${process.env.shippo_key}` }
+            headers: { 'authorization': `ShippoToken shippo_live_ecda4f08fde1c1481f5b9120f9e3ed2c0d0eaf28` }
+        });
+        const data = await response.data;
+        if (data.tracking_status?.status && data.tracking_status?.status == "DELIVERED") {
+            //if (true) {
+            return res.status(200).json(data)
+            // updateEntry("shippments", req.body.id, { status: "delivered" }, () => {
+            //     console.log("Updated Record");
+            //     return res.status(200).json(data)
+            // })
+        } else {
+            return res.status(200).json(data)
+        }
+    }catch(err){
+        return res.status(500).json({
+            status: "Internal Server Error",
+            "error": JSON.stringify(err)
+        });
+    }
+    
+
+})
+
 
 router.get("/carriers", async (req, res, next) => {
 

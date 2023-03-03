@@ -8,9 +8,11 @@ var jsonwebtoken = require('jsonwebtoken');
 const dbConn= require('./db');
 const routerShip=require("./shippo");
 const routerUser=require("./user");
+const cors = require('cors');
 
 global.db=dbConn.db;
 
+app.use(cors());
 // For parsing application/json
 app.use(express.json());
 // For parsing application/x-www-form-urlencoded
