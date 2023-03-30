@@ -43,7 +43,7 @@ router.post("/addTracking", async (req, res, next) => {
                 method: 'post',
                 body: null,
                 //headers: { 'authorization': `ShippoToken ${process.env.shippo_key}` }
-                headers: { 'authorization': `ShippoToken shippo_live_d33c92a86bae687bd2c907e695dd070c8a21befd` }
+                headers: { 'authorization': `ShippoToken ${process.env.shippo_prod_key}` }
             });
             const data = await response.data;
             if (data.tracking_status?.status && data.tracking_status?.status == "DELIVERED") {
