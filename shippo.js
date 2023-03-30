@@ -16,7 +16,8 @@ router.post("/addTracking", async (req, res, next) => {
         name: Joi.string().min(3).max(80).required(),
         shippingProvider: Joi.string().min(1).max(11).required(),
         trackingNum: Joi.string().min(1).max(40).required(),
-        status: Joi.string().optional()
+        status: Joi.string().optional(),
+        labelUrl: Joi.string().optional()
     });
     const result = schema.validate(req.body);
     if (result.error) {
@@ -29,6 +30,7 @@ router.post("/addTracking", async (req, res, next) => {
             "trackingNum": body.trackingNum,
             "userId": userId,
             "status": body.status ? body.status : '',
+            "labelUrl":body.labelUrl?body.labelUrl:'',
             createdDateTime: moment().format('YYYY-MM-DD HH:mm:ss'),
             updatedDateTime: moment().format('YYYY-MM-DD HH:mm:ss')
         });
@@ -129,14 +131,16 @@ router.post("/trackingMoreDetails", async (req, res, next) => {
     let myDate = new Date();
     myDate = myDate.toString();
     try {
-        const uri = `https://api.goshippo.com/tracks/?carrier=${req.body.shipper}&tracking_number=${req.body.trackingNum}`
-        const response = await axios(uri, {
-            method: 'post',
-            body: null,
-            //headers: { 'authorization': `ShippoToken ${process.env.shippo_key}` }
-            headers: { 'authorization': `ShippoToken ${process.env.shippo_prod_key}` }
-        });
-        const data = await response.data;
+        // const uri = `https://api.goshippo.com/tracks/?carrier=${req.body.shipper}&tracking_number=${req.body.trackingNum}`
+        // const response = await axios(uri, {
+        //     method: 'post',
+        //     body: null,
+        //     //headers: { 'authorization': `ShippoToken ${process.env.shippo_key}` }
+        //     headers: { 'authorization': `ShippoToken ${process.env.shippo_prod_key}` }
+        // });
+        // const data = await response.data;
+
+        const data={"tracking_number":"1Z9708X20397087608","carrier":"ups","servicelevel":{"name":"Ground","token":"ups_ground"},"transaction":null,"address_from":{"city":"Wyoming","state":"MI","zip":"49519","country":"US"},"address_to":{"city":"Jacksonville","state":"FL","zip":"32202","country":"US"},"eta":null,"original_eta":null,"metadata":null,"test":false,"tracking_status":{"status_date":"2023-03-15T14:50:55Z","status_details":"Delivered","location":{"city":"Jacksonville","state":"FL","zip":"32202","country":"US"},"substatus":{"code":"delivered","text":"Package has been delivered.","action_required":false},"object_created":"2023-03-19T04:11:06.615Z","object_updated":"2023-03-19T04:11:06.615Z","object_id":"b6e7cc19ec8c412baea48f2d140e203f","status":"DELIVERED"},"tracking_history":[{"status_date":"2023-03-13T17:03:54Z","status_details":"Origin Scan","location":{"city":"Wyoming","state":"MI","zip":"","country":"US"},"substatus":{"code":"package_accepted","text":"Package has been accepted into the carrier network for delivery.","action_required":false},"object_created":"2023-03-19T04:11:06.615Z","object_updated":"2023-03-19T04:11:06.615Z","object_id":"08256f960b2b405faf9e9e3e17bb8843","status":"TRANSIT"},{"status_date":"2023-03-14T01:09:00Z","status_details":"Departed from Facility","location":{"city":"Wyoming","state":"MI","zip":"","country":"US"},"substatus":{"code":"package_departed","text":"Package has departed from an intermediate location in the carrier network.","action_required":false},"object_created":"2023-03-19T04:11:06.615Z","object_updated":"2023-03-19T04:11:06.615Z","object_id":"304fe2b3c78844dd9f4a37de2ab97513","status":"TRANSIT"},{"status_date":"2023-03-14T18:58:00Z","status_details":"Arrived at Facility","location":{"city":"Jacksonville","state":"FL","zip":"","country":"US"},"substatus":{"code":"package_arrived","text":"Package has arrived at an intermediate location in the carrier network.","action_required":false},"object_created":"2023-03-19T04:11:06.615Z","object_updated":"2023-03-19T04:11:06.615Z","object_id":"adbc254783be469e8af67d8e41c01341","status":"TRANSIT"},{"status_date":"2023-03-15T09:14:45Z","status_details":"Processing at UPS Facility","location":{"city":"Jacksonville","state":"FL","zip":"","country":"US"},"substatus":{"code":"package_processing","text":"Package is processing at an intermediate location in the carrier network.","action_required":false},"object_created":"2023-03-19T04:11:06.615Z","object_updated":"2023-03-19T04:11:06.615Z","object_id":"e3dcb4dea25e4777a5c101bc045f6be0","status":"TRANSIT"},{"status_date":"2023-03-15T13:31:13Z","status_details":"Out For Delivery Today","location":{"city":"Jacksonville","state":"FL","zip":"","country":"US"},"substatus":{"code":"out_for_delivery","text":"Package is out for delivery.","action_required":false},"object_created":"2023-03-19T04:11:06.615Z","object_updated":"2023-03-19T04:11:06.615Z","object_id":"de097453d3774a4aa14a93cd44006ac0","status":"TRANSIT"},{"status_date":"2023-03-15T14:50:55Z","status_details":"Delivered","location":{"city":"Jacksonville","state":"FL","zip":"32202","country":"US"},"substatus":{"code":"delivered","text":"Package has been delivered.","action_required":false},"object_created":"2023-03-19T04:11:06.615Z","object_updated":"2023-03-19T04:11:06.615Z","object_id":"b6e7cc19ec8c412baea48f2d140e203f","status":"DELIVERED"}],"messages":[]};
         if (data.tracking_status?.status && data.tracking_status?.status == "DELIVERED") {
             //if (true) {
             return res.status(200).json(data)
@@ -212,6 +216,8 @@ router.post("/createShipmentLabel", async (req, res, next) => {
         }, function (err, transaction) {
             // asynchronous callback
             if (!err) {
+
+
                 return res.status(200).json({
                     transaction: transaction
                 });
